@@ -82,6 +82,9 @@ class ClickRegexPlugin(GObject.Object, Gedit.WindowActivatable):
     def __init__(self):
         GObject.Object.__init__(self)
 
+        self._mouse_handler_ids_per_view = {}
+        """The mouse handler id for each of the window's views."""
+
     def _get_instance( self ):
         return self.window.DATA_TAG
 
@@ -90,6 +93,7 @@ class ClickRegexPlugin(GObject.Object, Gedit.WindowActivatable):
 
     def do_activate( self ):
         self._set_instance( ClickRegexPluginInstance( self, self.window ) )
+        self._connect_window()
 
     def do_deactivate( self ):
         if self._get_instance():
@@ -98,3 +102,35 @@ class ClickRegexPlugin(GObject.Object, Gedit.WindowActivatable):
 
     def do_update_ui( self ):
         self._get_instance().update_ui()
+
+    def _connect_window(self):
+        """Connect handler for tab removal."""
+        self.tab_removed_handler = self.window.connect('tab-removed',
+            self.on_tab_removed)
+
+    def on_tab_removed(self, window, tab):
+        self._disconnect_tab(tab)
+        return False
+
+    def _disconnect_tab(self, tab):
+        """Disconnect signal handlers from the View(s) in the tab."""
+        scrollwin = self._get_tab_scrollwin(tab)
+        for view in self._get_scrollwin_views(scrollwin):
+            self._disconnect_view(view)
+
+    def _disconnect_view(self, view):
+        """Disconnect the mouse handler from the view."""
+        if view in self._mouse_handler_ids_per_view:
+            self._disconnect_mouse_handler(view)
+
+    def _get_tab_scrollwin(self, tab):
+        """Return the ScrolledWindow of the tab."""
+        view_frame = tab.get_children()[0]
+        animated_overlay = view_frame.get_children()[0]
+        scrollwin = animated_overlay.get_children()[0]
+        return scrollwin
+
+    def _get_scrollwin_views(self, scrollwin):
+        """Return the View(s) in the ScrolledWindow."""
+        child = scrollwin.get_child()
+        return [child]
