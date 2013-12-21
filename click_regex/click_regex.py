@@ -90,17 +90,30 @@ class ClickRegexWindowHelper:
     # open config.json file
     pass
 
+  def _get_click_iter(self, view, event):
+    """Return the current cursor location based on the click location."""
+    buffer_x, buffer_y = view.window_to_buffer_coords(
+                    view.get_window_type(event.window),
+                    int(event.x),
+                    int(event.y))
+    event_iter = view.get_iter_at_location(buffer_x, buffer_y)
+    return event_iter
+
   def on_view_button_press_event(self, view, event):
     # handle left double click
     if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
       click_iter = self._get_click_iter(view, event)
-      spit('hey')
+      if not click_iter:
+        click_iter = self._get_insert_iter()
 
-  def _get_click_iter(self, view, event):
-      """Return the current cursor location based on the click location."""
-      buffer_x, buffer_y = view.window_to_buffer_coords(
-                      view.get_window_type(event.window),
-                      int(event.x),
-                      int(event.y))
-      event_iter = view.get_iter_at_location(buffer_x, buffer_y)
-      return event_iter
+      word_re = re.compile('\w')
+      def test_not_in_re(character):
+        if word_re.match(character):
+          return False
+        return True
+
+      left_iter = click_iter.copy()
+      right_iter = click_iter.copy()
+      right_iter.forward_find_char(test_not_in_re)
+
+      spit([word_re,click_iter.get_offset(),right_iter.get_offset()])
