@@ -1,6 +1,6 @@
 # -*- encoding:utf-8 -*-
 
-from gi.repository import Gtk, Gdk, Gedit
+from gi.repository import Gtk, Gdk, Gedit, Gio, GLib
 import re
 import json
 import inspect, os, sys
@@ -94,8 +94,15 @@ class ClickRegexWindowHelper:
 
   def click_regex_configure(self, action, data = None):
     # open config.json file
-    # only reload by now...
-    self.reload_config()
+    location = Gio.File.new_for_uri("file://" + self.config_file)
+    tab = self._window.get_tab_from_location(location)
+    if tab is None:
+        tab = self._window.create_tab_from_location(location, None,
+                                        1, 1, False, True)
+        view = tab.get_view()
+    else:
+        view = self._set_active_tab(tab, 1, 1)
+    GLib.idle_add(view.grab_focus)
 
   def click_regex_reload(self, action, data = None):
     self.reload_config()
