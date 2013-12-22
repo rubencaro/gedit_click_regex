@@ -13,6 +13,7 @@ ui_str = """<ui>
         <menu name="ClickRegexMenu" action="ClickRegexMenu">
           <placeholder name="ClickRegexMenuHolder">
             <menuitem name="click_regex_configure" action="click_regex_configure"/>
+            <menuitem name="click_regex_reload" action="click_regex_reload"/>
           </placeholder>
         </menu>
         <separator/>
@@ -55,8 +56,9 @@ class ClickRegexWindowHelper:
 
     # Create a new action group
     self._action_group = Gtk.ActionGroup("ClickRegexActions")
-    self._action_group.add_actions( [("ClickRegexMenu", None, _('Click Regex'))] + \
-                    [("click_regex_configure", None, _("Configuration"), None, _("Click Regex Configure"), self.click_regex_configure)])
+    self._action_group.add_actions( [("ClickRegexMenu", None, 'Click Regex')] + \
+                    [("click_regex_reload", None, "Reload configuration", None, None, self.click_regex_reload)] + \
+                    [("click_regex_configure", None, "Edit configuration", None, None, self.click_regex_configure)])
 
     # Insert the action group
     manager.insert_action_group(self._action_group, -1)
@@ -93,6 +95,9 @@ class ClickRegexWindowHelper:
   def click_regex_configure(self, action, data = None):
     # open config.json file
     # only reload by now...
+    self.reload_config()
+
+  def click_regex_reload(self, action, data = None):
     self.reload_config()
 
   def _get_click_iter(self, view, event):
