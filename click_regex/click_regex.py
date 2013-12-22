@@ -23,7 +23,7 @@ ui_str = """<ui>
 """
 
 def spit(obj):
-    print( str(obj) )
+    print( 'click_regex: ' + str(obj) )
 
 class ClickRegexWindowHelper:
   def __init__(self, plugin, window):
@@ -102,18 +102,34 @@ class ClickRegexWindowHelper:
   def on_view_button_press_event(self, view, event):
     # handle left double click
     if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
+
+      r = re.compile('[\w_]')
+
       click_iter = self._get_click_iter(view, event)
       if not click_iter:
         click_iter = self._get_insert_iter()
 
-      word_re = re.compile('\w')
-      def test_not_in_re(character):
-        if word_re.match(character):
-          return False
-        return True
+      # find boundaries
+      # backward_find_char and forward_find_char would be perfect, but they do not work by now...
 
-      left_iter = click_iter.copy()
-      right_iter = click_iter.copy()
-      right_iter.forward_find_char(test_not_in_re)
+      # go to the left until start of line or non-word char is found
+      l_iter = click_iter.copy()
+      while r.match(l_iter.get_char()) and l_iter.get_line_offset() > 0:
+        l_iter.backward_char()
+      if not r.match(l_iter.get_char()):
+        l_iter.forward_char()
 
-      spit([word_re,click_iter.get_offset(),right_iter.get_offset()])
+      # go to the right until start of line or non-word char is found
+      r_iter = click_iter.copy()
+      while r.match(r_iter.get_char()) and r_iter.get_line_offset() > 0:
+        r_iter.forward_char()
+      if r_iter.get_offset() < l_iter.get_offset():
+        l_iter.backward_char()
+        r_iter = l_iter.copy()
+
+      doc = self._window.get_active_document()
+      doc.select_range(l_iter,r_iter)
+
+      spit( [ l_iter.get_char(),l_iter.get_offset(),r_iter.get_char(),r_iter.get_offset() ] )
+
+      return True
