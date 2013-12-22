@@ -97,12 +97,17 @@ class ClickRegexWindowHelper:
     location = Gio.File.new_for_uri("file://" + self.config_file)
     tab = self._window.get_tab_from_location(location)
     if tab is None:
-        tab = self._window.create_tab_from_location(location, None,
-                                        1, 1, False, True)
-        view = tab.get_view()
+      tab = self._window.create_tab_from_location(location, None,
+                                      1, 1, False, True)
+      view = tab.get_view()
+      doc = self._window.get_active_document()
+      doc.connect('saved', self.on_saved_config_file)
     else:
-        view = self._set_active_tab(tab, 1, 1)
+      view = self._window._set_active_tab(tab, 1, 1)
     GLib.idle_add(view.grab_focus)
+
+  def on_saved_config_file(self, *args):
+    self.reload_config()
 
   def click_regex_reload(self, action, data = None):
     self.reload_config()

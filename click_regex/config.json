@@ -1,1 +1,11 @@
-{ "double_click": "[\\w_]" }
+{
+  "help": [
+            "Edit this file to change Click Regex Plugin configuration.",
+            "New configuration will be applied by saving this file, ",
+            "or by clicking 'Reload Configuration'.",
+            "",
+            "Notice that regular expressions defined here",
+            "must match characters inside the word. Not boundaries."
+          ],
+  "double_click": "[\\w_]"
+}
