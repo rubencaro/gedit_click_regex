@@ -2,8 +2,8 @@
 
 from gi.repository import Gtk, Gdk, Gedit
 import re
-import os.path
-import shutil
+import json
+import inspect, os, sys
 
 ui_str = """<ui>
   <menubar name="MenuBar">
@@ -29,6 +29,10 @@ class ClickRegexWindowHelper:
   def __init__(self, plugin, window):
     self._window = window
     self._plugin = plugin
+
+    self.config_file = self.get_config_file_path()
+    self.config = {}
+    self.reload_config()
 
     # connect all present views
     views = self._window.get_views()
@@ -88,7 +92,8 @@ class ClickRegexWindowHelper:
 
   def click_regex_configure(self, action, data = None):
     # open config.json file
-    pass
+    # only reload by now...
+    self.reload_config()
 
   def _get_click_iter(self, view, event):
     """Return the current cursor location based on the click location."""
@@ -103,7 +108,7 @@ class ClickRegexWindowHelper:
     # handle left double click
     if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
 
-      r = re.compile('[\w_]')
+      r = re.compile(self.config['double_click'])
 
       click_iter = self._get_click_iter(view, event)
       if not click_iter:
@@ -130,6 +135,15 @@ class ClickRegexWindowHelper:
       doc = self._window.get_active_document()
       doc.select_range(l_iter,r_iter)
 
-      spit( [ l_iter.get_char(),l_iter.get_offset(),r_iter.get_char(),r_iter.get_offset() ] )
-
       return True
+
+  def get_config_file_path(self):
+    return os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + '/config.json'
+
+  def reload_config(self):
+    self.config = { 'double_click': '[\w_]' }
+    try:
+      self.config = json.load( open( self.config_file ) )
+    except:
+      print( 'click_regex: Could not load config file from ' + str(self.config_file) )
+      print( str(sys.exc_info()) )
